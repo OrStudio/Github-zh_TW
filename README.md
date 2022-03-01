@@ -1,1 +1,1 @@
-# [GitHub 繁體化插件][project-url]
+# GitHub 繁體化插件
