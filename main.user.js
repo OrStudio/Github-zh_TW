@@ -1,7 +1,7 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         GitHub 中文化插件
 // @namespace    https://github.com/maboloshi/github-chinese
-// @description  中文化 GitHub 界面的部分菜单及内容。原作者为楼教主(http://www.52cik.com/)。
+// @description  中文化 GitHub 界面的部分菜單及內容。原作者為樓教主(http://www.52cik.com/)。
 // @copyright    2021, 沙漠之子 (https://maboloshi.github.io/Blog)
 // @icon         https://github.githubassets.com/pinned-octocat.svg
 // @version      1.7.5
@@ -20,23 +20,23 @@
 
     var lang = 'zh'; // 中文
 
-    // 要翻译的页面
+    // 要翻譯的頁面
     var page = getPage();
 
-    transTitle(); // 页面标题翻译
-    translateBySelector(); // Selector 翻译
-    traverseNode(document.body); // 立即翻译页面
+    transTitle(); // 頁面標題翻譯
+    translateBySelector(); // Selector 翻譯
+    traverseNode(document.body); // 立即翻譯頁面
     watchUpdate();
 
-    // 翻译描述
-    translateDesc(".f4.my-3"); //仓库简介翻译
-    translateDesc(".gist-content [itemprop='about']"); // Gist 简介翻译
+    // 翻譯描述
+    translateDesc(".f4.my-3"); //倉庫簡介翻譯
+    translateDesc(".gist-content [itemprop='about']"); // Gist 簡介翻譯
 
     /**
-     * 监听节点变化, 触发和调用翻译函数
+     * 監聽節點變化, 觸發和調用翻譯函數
      *
      * 2021-10-07 11:28:30
-     * 使用原生API 代替 jQuery 的 `ajaxComplete`函数
+     * 使用原生API 代替 jQuery 的 `ajaxComplete`函數
      */
     function watchUpdate() {
         const m =
@@ -46,21 +46,21 @@
         var currentPath = location.pathname;
         new m(function (mutations) {
             /**
-             * 仅翻译变更部分 不在全局匹配
+             * 僅翻譯變更部分 不在全局匹配
              *
-             * 且仅监听:
-             *    1. 节点增加
-             *    2. 节点属性的变化
+             * 且僅監聽:
+             *    1. 節點增加
+             *    2. 節點屬性的變化
              *
              * 2021-10-10 15:24:49
-             * 遍历节点 函数 walk 需相应打2个补丁 适配
+             * 遍歷節點 函數 walk 需相應打2個補丁 適配
              * */
             if(location.pathname !== currentPath) {
                 currentPath = location.pathname;
-                page = getPage(); // 仅当,页面地址发生变化时运行
+                page = getPage(); // 僅當,頁面地址發生變化時運行
             }
             for(let mutation of mutations) { // for速度比forEach快
-                if (mutation.addedNodes || mutation.type === 'attributes') { // 仅当节点增加 或者属性更改
+                if (mutation.addedNodes || mutation.type === 'attributes') { // 僅當節點增加 或者屬性更改
                     traverseNode(mutation.target);
                 }
             }
@@ -68,12 +68,12 @@
             subtree: true,
             characterData: true,
             childList: true,
-            attributeFilter: ['value', 'placeholder', 'aria-label', 'data', 'data-confirm'], // 仅观察特定属性变化(试验测试阶段，有问题再恢复)
+            attributeFilter: ['value', 'placeholder', 'aria-label', 'data', 'data-confirm'], // 僅觀察特定屬性變化(試驗測試階段，有問題再恢復)
         });
 
         new m(function(mutations) {
             transTitle();
-            translateBySelector(); // Selector 翻译 目前先跟随 url 即页面标题变化
+            translateBySelector(); // Selector 翻譯 目前先跟隨 url 即頁面標題變化
         }).observe(
             document.querySelector('title'),
             { characterData: true, childList: true }
@@ -81,12 +81,12 @@
     }
 
     /**
-     * 遍历节点
+     * 遍歷節點
      *
-     * @param {Element} node 节点
+     * @param {Element} node 節點
      */
     function traverseNode(node) {
-        // 跳过忽略
+        // 跳過忽略
         if (I18N.conf.reIgnoreId.test(node.id) ||
             I18N.conf.reIgnoreClass.test(node.className) ||
             I18N.conf.reIgnoreTag.test(node.tagName) ||
@@ -97,16 +97,16 @@
 
         var nodes = node.childNodes;
 
-        for (var i = 0, len = nodes.length; i <= len; i++) { // 遍历节点
-            var el = nodes[i] ? nodes[i] : node; //可能还要优化 该节点不存在子节点
-            // todo 1. 修复多属性翻译问题; 2. 添加事件翻译, 如论预览信息;
+        for (var i = 0, len = nodes.length; i <= len; i++) { // 遍歷節點
+            var el = nodes[i] ? nodes[i] : node; //可能還要最佳化 該節點不存在子節點
+            // todo 1. 修復多屬性翻譯問題; 2. 添加事件翻譯, 如論預覽訊息;
 
-            if (el.nodeType === Node.ELEMENT_NODE) { // 元素节点处理
+            if (el.nodeType === Node.ELEMENT_NODE) { // 元素節點處理
 
-                // 元素节点属性翻译
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { // 输入框 按钮 文本域
+                // 元素節點屬性翻譯
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { // 輸入框 按鈕 文本域
                     if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') {
-                        if (el.hasAttribute('data-confirm')) { // 翻译 浏览器 提示对话框
+                        if (el.hasAttribute('data-confirm')) { // 翻譯 瀏覽器 提示對話框
                             transElement(el, 'data-confirm', true);
                         }
                         transElement(el, 'value');
@@ -115,33 +115,33 @@
                     }
                 } else if (el.tagName === 'BUTTON'){
                     if (el.hasAttribute('aria-label')) {
-                        transElement(el, 'aria-label', true); // 翻译 浏览器 提示对话框
+                        transElement(el, 'aria-label', true); // 翻譯 瀏覽器 提示對話框
                     }
                     if (el.hasAttribute('data-confirm')) {
-                        transElement(el, 'data-confirm', true); // 翻译 浏览器 提示对话框 ok
+                        transElement(el, 'data-confirm', true); // 翻譯 瀏覽器 提示對話框 ok
                     }
                     if (el.hasAttribute('data-confirm-text')) {
-                        transElement(el, 'data-confirm-text', true); // 翻译 浏览器 提示对话框 ok
+                        transElement(el, 'data-confirm-text', true); // 翻譯 瀏覽器 提示對話框 ok
                     }
                     if (el.hasAttribute('data-confirm-cancel-text')) {
-                        transElement(el, 'data-confirm-cancel-text', true); // 取消按钮 提醒
+                        transElement(el, 'data-confirm-cancel-text', true); // 取消按鈕 提醒
                     }
                     if (el.hasAttribute('cancel-confirm-text')) {
-                        transElement(el, 'cancel-confirm-text', true); // 取消按钮 提醒
+                        transElement(el, 'cancel-confirm-text', true); // 取消按鈕 提醒
                     }
-                    if (el.hasAttribute('data-disable-with')) { // 按钮等待提示
+                    if (el.hasAttribute('data-disable-with')) { // 按鈕等待提示
                         transElement(el.dataset, 'disableWith');
                     }
-                } else if (el.tagName === 'OPTGROUP') { // 翻译 <optgroup> 的 label 属性
+                } else if (el.tagName === 'OPTGROUP') { // 翻譯 <optgroup> 的 label 屬性
                     transElement(el, 'label');
-                } else if (/tooltipped/.test(el.className)) { // 仅当 元素存在'tooltipped'样式 aria-label 才起效果
-                    transElement(el, 'aria-label', true); // 带提示的元素，类似 tooltip 效果的
+                } else if (/tooltipped/.test(el.className)) { // 僅當 元素存在'tooltipped'樣式 aria-label 才起效果
+                    transElement(el, 'aria-label', true); // 帶提示的元素，類似 tooltip 效果的
                 }
                 if (el != node) {
-                    traverseNode(el); // 遍历子节点
+                    traverseNode(el); // 遍歷子節點
                 }
-            } else if (el.nodeType === Node.TEXT_NODE) { // 文本节点翻译
-                if (el.length <= 500){ // 修复 许可证编辑框初始化载入内容被翻译
+            } else if (el.nodeType === Node.TEXT_NODE) { // 文本節點翻譯
+                if (el.length <= 500){ // 修復 許可證編輯框初始化載入內容被翻譯
                     transElement(el, 'data');
                 }
             }
@@ -149,43 +149,43 @@
     }
 
     /**
-     * 获取翻译页面
+     * 獲取翻譯頁面
      *
      * 2021-10-07 11:48:50
-     * 参考 v2.0 中规则
+     * 參考 v2.0 中規則
      */
     function getPage() {
-        // 站点，如 gist, developer, help 等，默认主站是 github
-        const site = location.host.replace(/\.?github\.com$/, '') || 'github'; // 站点
-        const pathname = location.pathname; // 当前路径
-        const isLogin = /logged-in/.test(document.body.className); // 是否登录
+        // 站點，如 gist, developer, help 等，默認主站是 github
+        const site = location.host.replace(/\.?github\.com$/, '') || 'github'; // 站點
+        const pathname = location.pathname; // 當前路徑
+        const isLogin = /logged-in/.test(document.body.className); // 是否登錄
 
-        // 用于确定 个人首页，组织首页，仓库页 然后做判断
+        // 用於確定 個人首頁，組織首頁，倉庫頁 然後做判斷
         const analyticsLocation = (document.getElementsByName('analytics-location')[0] || 0).content || '';
-        //const isProfile = analyticsLocation === '/<user-name>'; // 仅个人首页 其标签页识别不了 优先使用Class 过滤
+        //const isProfile = analyticsLocation === '/<user-name>'; // 僅個人首頁 其標籤頁識別不了 優先使用Class 過濾
         // 如 maboloshi?tab=repositories 等
-        const isOrganization = /\/<org-login>/.test(analyticsLocation); // 组织页
-        const isRepository = /\/<user-name>\/<repo-name>/.test(analyticsLocation); // 仓库页
+        const isOrganization = /\/<org-login>/.test(analyticsLocation); // 組織頁
+        const isRepository = /\/<user-name>\/<repo-name>/.test(analyticsLocation); // 倉庫頁
 
-        if (site === 'gist') { // Gist 站点
+        if (site === 'gist') { // Gist 站點
             return 'gist';
         }
 
-        if (pathname === '/' && site === 'github') { // github.com 首页
+        if (pathname === '/' && site === 'github') { // github.com 首頁
             return isLogin ? 'page-dashboard' : 'homepage';
-        } //登录 或 未登录
+        } //登錄 或 未登錄
 
-        // 仅个人首页 其标签页识别不了 优先使用 Class 过滤(/page-profile/)
-        // if (isProfile) { // 个人首页
+        // 僅個人首頁 其標籤頁識別不了 優先使用 Class 過濾(/page-profile/)
+        // if (isProfile) { // 個人首頁
         //     return 'page-profile';
         // }
 
-        if (isRepository) { // 仓库页
+        if (isRepository) { // 倉庫頁
             let t = pathname.match(I18N.conf.rePagePathRepo);
             return t ? 'repository/'+t[1] : 'repository';
         }
 
-        if (isOrganization) { // 组织页
+        if (isOrganization) { // 組織頁
             let t = pathname.match(I18N.conf.rePagePathOrg);
             return t ? 'orgs/'+t[1] : 'orgs';
         }
@@ -193,20 +193,20 @@
         // 匹配 body 的 class
         var page = document.body.className.match(I18N.conf.rePageClass);
 
-        if (!page) { // 扩展 pathname 匹配
+        if (!page) { // 擴展 pathname 匹配
             page = pathname.match(I18N.conf.rePagePath);
         }
 
-        return page ? page[1] : false; // 取页面 key
+        return page ? page[1] : false; // 取頁面 key
     }
 
     /**
-     * 翻译页面标题
+     * 翻譯頁面標題
      */
     function transTitle() {
         var title = translate(document.title, 'title');
 
-        if (!title) { // 无翻译则退出
+        if (!title) { // 無翻譯則退出
             return false;
         }
 
@@ -215,28 +215,28 @@
 
 
     /**
-     * 翻译节点对应属性内容
+     * 翻譯節點對應屬性內容
      *
-     * @param {object} el 对象
-     * @param {string} field 属性字段
-     * @param {boolean} isAttr 是否是 attr 属性
+     * @param {object} el 對象
+     * @param {string} field 屬性欄位
+     * @param {boolean} isAttr 是否是 attr 屬性
      *
      * @returns {boolean}
      */
     function transElement(el, field, isAttr=false) {
-        var transText; // 翻译后的文本
+        var transText; // 翻譯後的文本
 
-        if (!isAttr) { // 非属性翻译
+        if (!isAttr) { // 非屬性翻譯
             transText = translate(el[field], page);
         } else {
             transText = translate(el.getAttribute(field), page);
         }
 
-        if (!transText) { // 无翻译则退出
+        if (!transText) { // 無翻譯則退出
             return false;
         }
 
-        // 替换翻译后的内容
+        // 替換翻譯後的內容
         if (!isAttr) {
             el[field] = transText;
         } else {
@@ -246,62 +246,62 @@
 
 
     /**
-     * 翻译文本
+     * 翻譯文本
      *
-     * @param {string} text 待翻译字符串
-     * @param {string} page 页面字段
+     * @param {string} text 待翻譯字串
+     * @param {string} page 頁面欄位
      *
      * @returns {string|boolean}
      */
-    function translate(text, page) { // 翻译
+    function translate(text, page) { // 翻譯
 
         if (!isNaN(text)) {
             return false;
-        } // 内容为空, 空白字符和或数字 不翻译
+        } // 內容為空, 空白字元和或數字 不翻譯
 
         var str;
         var _key = text.trim(); // 去除首尾空格的 key
         var _key_neat = _key
-            .replace(/\xa0/g, ' ') // 替换 &nbsp; 空格导致的 bug
-            .replace(/\s{2,}/g, ' ') // 去除多余空白字符，(试验测试阶段，有问题再恢复)
-            .replace(/[\s\r\n]+/g, ' '); // 替换中间的换行符为空格; 后期正则翻译规则可以不用考虑换行符的问题了
+            .replace(/\xa0/g, ' ') // 替換 &nbsp; 空格導致的 bug
+            .replace(/\s{2,}/g, ' ') // 去除多餘空白字元，(試驗測試階段，有問題再恢復)
+            .replace(/[\s\r\n]+/g, ' '); // 替換中間的換行符為空格; 後期正則翻譯規則可以不用考慮換行符的問題了
 
         if (page === 'title') {
             return transPage('title', _key_neat);
-        } // 翻译网页标题
+        } // 翻譯網頁標題
 
-        str = transPage('pubilc', _key_neat); // 公共翻译
+        str = transPage('pubilc', _key_neat); // 公共翻譯
 
-        if (str && str !== _key_neat) { // 公共翻译完成
-            return text.replace(_key, str);  // 替换原字符，保留空白部分
+        if (str && str !== _key_neat) { // 公共翻譯完成
+            return text.replace(_key, str);  // 替換原字元，保留空白部分
         }
 
         if (!page) {
             return false;
-        } // 未知页面不翻译
+        } // 未知頁面不翻譯
 
-        str = transPage(page, _key_neat); // 翻译已知页面
+        str = transPage(page, _key_neat); // 翻譯已知頁面
         if (!str) {
             return false;
-        } // 未知内容不翻译
+        } // 未知內容不翻譯
 
-        return text.replace(_key, str); // 替换原字符，保留空白部分
+        return text.replace(_key, str); // 替換原字元，保留空白部分
     }
 
 
     /**
-     * 翻译页面内容
+     * 翻譯頁面內容
      *
-     * @param {string} page 页面
-     * @param {string} key 待翻译内容
-     * @param {boolean} isRegexp 是否仅翻译正则部分
+     * @param {string} page 頁面
+     * @param {string} key 待翻譯內容
+     * @param {boolean} isRegexp 是否僅翻譯正則部分
      *
      * @returns {string|boolean}
      */
     function transPage(page, key, isRegexp=false) {
-        var str; // 翻译结果
+        var str; // 翻譯結果
 
-        // 静态翻译
+        // 靜態翻譯
         if (!isRegexp) {
             str = I18N[lang][page]['static'][key];
             if (typeof str === 'string') {
@@ -309,8 +309,8 @@
             }
         }
 
-        // 正则翻译
-        var res = I18N[lang][page].regexp; // 正则数组
+        // 正則翻譯
+        var res = I18N[lang][page].regexp; // 正則數組
         if (res) {
             for (var i = 0, len = res.length; i < len; i++) {
                 str = key.replace(res[i][0], res[i][1]);
@@ -320,15 +320,15 @@
             }
         }
 
-        return false; // 没有翻译条目
+        return false; // 沒有翻譯條目
     }
 
     /**
-     * 翻译描述
+     * 翻譯描述
      *
      * 2021-10-06 16:41:54
-     * 来自：k1995/github-i18n-plugin
-     * 改写为原生代码
+     * 來自：k1995/github-i18n-plugin
+     * 改寫為原生代碼
      */
     function translateDesc(el) {
         let element = document.querySelector(el);
@@ -337,7 +337,7 @@
             return false;
         }
 
-        element.insertAdjacentHTML('afterend', "<a id='translate-me' href='#' style='color:rgb(27, 149, 224);font-size: small'>翻译</a>");
+        element.insertAdjacentHTML('afterend', "<a id='translate-me' href='#' style='color:rgb(27, 149, 224);font-size: small'>翻譯</a>");
         let translate_me = document.getElementById('translate-me')
 
         translate_me.onclick = function() {
@@ -356,9 +356,9 @@
                          translate_me.style.display="none";
                         // render result
                         const text = res.responseText;
-                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社区</a> 翻译👇</span><br/>"+text);
+                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社區</a> 翻譯👇</span><br/>"+text);
                     } else {
-                        alert("翻译失败");
+                        alert("翻譯失敗");
                     }
                 }
             });
@@ -366,13 +366,13 @@
     }
 
     /**
-     * js原生选择器 翻译元素
+     * js原生選擇器 翻譯元素
      *
      * 2022-02-04 19:46:44
-     * 灵感参考自：k1995/github-i18n-plugin
+     * 靈感參考自：k1995/github-i18n-plugin
      */
     function translateBySelector() {
-        var res = I18N[lang].selector; // 数组
+        var res = I18N[lang].selector; // 數組
         if (res) {
             for (var i = 0, len = res.length; i < len; i++) {
                 let element = document.querySelector(res[i][0])
