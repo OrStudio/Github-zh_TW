@@ -1,5 +1,5 @@
 ﻿// ==UserScript==
-// @name         GitHub 中文化插件
+// @name         GitHub 繁體中文化插件
 // @namespace    https://github.com/maboloshi/github-chinese
 // @description  中文化 GitHub 界面的部分菜單及內容。原作者為樓教主(http://www.52cik.com/)。
 // @copyright    2021, 沙漠之子 (https://maboloshi.github.io/Blog)
@@ -9,7 +9,7 @@
 // @license      GPL-3.0
 // @match        https://github.com/*
 // @match        https://gist.github.com/*
-// @require      https://maboloshi.github.io/github-chinese/locals.js?v1.7.5
+// @require      https://cdn.jsdelivr.net/gh/cracky5322/Github-zh_TW/locals.js
 // @run-at       document-end
 // @grant        GM_xmlhttpRequest
 // @connect      www.githubs.cn
