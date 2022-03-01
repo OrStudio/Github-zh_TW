@@ -1,11 +1,11 @@
 ﻿// ==UserScript==
-// @name         GitHub 繁體中文化插件
-// @namespace    https://github.com/maboloshi/github-chinese
-// @description  中文化 GitHub 界面的部分菜單及內容。原作者為樓教主(http://www.52cik.com/)。
-// @copyright    2021, 沙漠之子 (https://maboloshi.github.io/Blog)
+// @name         GitHub 繁體中文化外掛
+// @namespace    https://github.com/cracky5322/Github-zh_TW
+// @description  中文化 GitHub 介面的部分選單及內容。原作者為樓教主(http://www.52cik.com/)與 maboloshi(https://github.com/maboloshi/github-chinese)。
+// @copyright    2022, Orstudio (https://orstudio.tw/)
 // @icon         https://github.githubassets.com/pinned-octocat.svg
-// @version      1.7.5
-// @author       沙漠之子
+// @version      1.0.1
+// @author       Orstudio
 // @license      GPL-3.0
 // @match        https://github.com/*
 // @match        https://gist.github.com/*
@@ -33,10 +33,10 @@
     translateDesc(".gist-content [itemprop='about']"); // Gist 簡介翻譯
 
     /**
-     * 監聽節點變化, 觸發和調用翻譯函數
+     * 監聽節點變化, 觸發和呼叫翻譯函式
      *
      * 2021-10-07 11:28:30
-     * 使用原生API 代替 jQuery 的 `ajaxComplete`函數
+     * 使用原生API 代替 jQuery 的 `ajaxComplete`函式
      */
     function watchUpdate() {
         const m =
@@ -46,18 +46,18 @@
         var currentPath = location.pathname;
         new m(function (mutations) {
             /**
-             * 僅翻譯變更部分 不在全局匹配
+             * 僅翻譯變更部分 不在全域性匹配
              *
              * 且僅監聽:
              *    1. 節點增加
              *    2. 節點屬性的變化
              *
              * 2021-10-10 15:24:49
-             * 遍歷節點 函數 walk 需相應打2個補丁 適配
+             * 遍歷節點 函式 walk 需相應打2個補丁 適配
              * */
             if(location.pathname !== currentPath) {
                 currentPath = location.pathname;
-                page = getPage(); // 僅當,頁面地址發生變化時運行
+                page = getPage(); // 僅當,頁面地址發生變化時執行
             }
             for(let mutation of mutations) { // for速度比forEach快
                 if (mutation.addedNodes || mutation.type === 'attributes') { // 僅當節點增加 或者屬性更改
@@ -99,14 +99,14 @@
 
         for (var i = 0, len = nodes.length; i <= len; i++) { // 遍歷節點
             var el = nodes[i] ? nodes[i] : node; //可能還要最佳化 該節點不存在子節點
-            // todo 1. 修復多屬性翻譯問題; 2. 添加事件翻譯, 如論預覽訊息;
+            // todo 1. 修復多屬性翻譯問題; 2. 新增事件翻譯, 如論預覽訊息;
 
             if (el.nodeType === Node.ELEMENT_NODE) { // 元素節點處理
 
                 // 元素節點屬性翻譯
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { // 輸入框 按鈕 文本域
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { // 輸入框 按鈕 文字域
                     if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') {
-                        if (el.hasAttribute('data-confirm')) { // 翻譯 瀏覽器 提示對話框
+                        if (el.hasAttribute('data-confirm')) { // 翻譯 瀏覽器 提示對話方塊
                             transElement(el, 'data-confirm', true);
                         }
                         transElement(el, 'value');
@@ -115,13 +115,13 @@
                     }
                 } else if (el.tagName === 'BUTTON'){
                     if (el.hasAttribute('aria-label')) {
-                        transElement(el, 'aria-label', true); // 翻譯 瀏覽器 提示對話框
+                        transElement(el, 'aria-label', true); // 翻譯 瀏覽器 提示對話方塊
                     }
                     if (el.hasAttribute('data-confirm')) {
-                        transElement(el, 'data-confirm', true); // 翻譯 瀏覽器 提示對話框 ok
+                        transElement(el, 'data-confirm', true); // 翻譯 瀏覽器 提示對話方塊 ok
                     }
                     if (el.hasAttribute('data-confirm-text')) {
-                        transElement(el, 'data-confirm-text', true); // 翻譯 瀏覽器 提示對話框 ok
+                        transElement(el, 'data-confirm-text', true); // 翻譯 瀏覽器 提示對話方塊 ok
                     }
                     if (el.hasAttribute('data-confirm-cancel-text')) {
                         transElement(el, 'data-confirm-cancel-text', true); // 取消按鈕 提醒
@@ -140,7 +140,7 @@
                 if (el != node) {
                     traverseNode(el); // 遍歷子節點
                 }
-            } else if (el.nodeType === Node.TEXT_NODE) { // 文本節點翻譯
+            } else if (el.nodeType === Node.TEXT_NODE) { // 文字節點翻譯
                 if (el.length <= 500){ // 修復 許可證編輯框初始化載入內容被翻譯
                     transElement(el, 'data');
                 }
@@ -155,10 +155,10 @@
      * 參考 v2.0 中規則
      */
     function getPage() {
-        // 站點，如 gist, developer, help 等，默認主站是 github
+        // 站點，如 gist, developer, help 等，預設主站是 github
         const site = location.host.replace(/\.?github\.com$/, '') || 'github'; // 站點
         const pathname = location.pathname; // 當前路徑
-        const isLogin = /logged-in/.test(document.body.className); // 是否登錄
+        const isLogin = /logged-in/.test(document.body.className); // 是否登入
 
         // 用於確定 個人首頁，組織首頁，倉庫頁 然後做判斷
         const analyticsLocation = (document.getElementsByName('analytics-location')[0] || 0).content || '';
@@ -173,7 +173,7 @@
 
         if (pathname === '/' && site === 'github') { // github.com 首頁
             return isLogin ? 'page-dashboard' : 'homepage';
-        } //登錄 或 未登錄
+        } //登入 或 未登入
 
         // 僅個人首頁 其標籤頁識別不了 優先使用 Class 過濾(/page-profile/)
         // if (isProfile) { // 個人首頁
@@ -193,7 +193,7 @@
         // 匹配 body 的 class
         var page = document.body.className.match(I18N.conf.rePageClass);
 
-        if (!page) { // 擴展 pathname 匹配
+        if (!page) { // 擴充套件 pathname 匹配
             page = pathname.match(I18N.conf.rePagePath);
         }
 
@@ -217,14 +217,14 @@
     /**
      * 翻譯節點對應屬性內容
      *
-     * @param {object} el 對象
+     * @param {object} el 物件
      * @param {string} field 屬性欄位
      * @param {boolean} isAttr 是否是 attr 屬性
      *
      * @returns {boolean}
      */
     function transElement(el, field, isAttr=false) {
-        var transText; // 翻譯後的文本
+        var transText; // 翻譯後的文字
 
         if (!isAttr) { // 非屬性翻譯
             transText = translate(el[field], page);
@@ -246,7 +246,7 @@
 
 
     /**
-     * 翻譯文本
+     * 翻譯文字
      *
      * @param {string} text 待翻譯字串
      * @param {string} page 頁面欄位
@@ -310,7 +310,7 @@
         }
 
         // 正則翻譯
-        var res = I18N[lang][page].regexp; // 正則數組
+        var res = I18N[lang][page].regexp; // 正則陣列
         if (res) {
             for (var i = 0, len = res.length; i < len; i++) {
                 str = key.replace(res[i][0], res[i][1]);
@@ -328,7 +328,7 @@
      *
      * 2021-10-06 16:41:54
      * 來自：k1995/github-i18n-plugin
-     * 改寫為原生代碼
+     * 改寫為原生程式碼
      */
     function translateDesc(el) {
         let element = document.querySelector(el);
@@ -356,7 +356,7 @@
                          translate_me.style.display="none";
                         // render result
                         const text = res.responseText;
-                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社區</a> 翻譯👇</span><br/>"+text);
+                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社羣</a> 翻譯👇</span><br/>"+text);
                     } else {
                         alert("翻譯失敗");
                     }
@@ -372,7 +372,7 @@
      * 靈感參考自：k1995/github-i18n-plugin
      */
     function translateBySelector() {
-        var res = I18N[lang].selector; // 數組
+        var res = I18N[lang].selector; // 陣列
         if (res) {
             for (var i = 0, len = res.length; i < len; i++) {
                 let element = document.querySelector(res[i][0])
