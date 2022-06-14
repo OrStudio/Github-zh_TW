@@ -1,10 +1,10 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         GitHub 繁體中文化外掛
-// @namespace    https://github.com/cracky5322/Github-zh_TW
-// @description  中文化 GitHub 介面的部分選單及內容。原作者為樓教主(http://www.52cik.com/)與 maboloshi(https://github.com/maboloshi/github-chinese)。
+// @namespace    https://github.com/maboloshi/github-chinese
+// @description  簡體中文化 GitHub 介面的部分選單及內容。原作者為樓教主(http://www.52cik.com/)，繁體中文化 GitHub 介面的部分選單及內容。修改者為 Orstudio (https://orstudio.tw/)。
 // @copyright    2022, Orstudio (https://orstudio.tw/)
 // @icon         https://github.githubassets.com/pinned-octocat.svg
-// @version      1.0.1
+// @version      1.1.0
 // @author       Orstudio
 // @license      GPL-3.0
 // @match        https://github.com/*
@@ -12,12 +12,17 @@
 // @require      https://cdn.jsdelivr.net/gh/cracky5322/Github-zh_TW/locals.js
 // @run-at       document-end
 // @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_notification
 // @connect      www.githubs.cn
 // ==/UserScript==
 
 (function (window, document, undefined) {
     'use strict';
 
+    var RegExp = GM_getValue("RegExp", 1);
     var lang = 'zh'; // 中文
 
     // 要翻譯的頁面
@@ -66,9 +71,8 @@
             }
         }).observe(document.body, {
             subtree: true,
-            characterData: true,
             childList: true,
-            attributeFilter: ['value', 'placeholder', 'aria-label', 'data', 'data-confirm'], // 僅觀察特定屬性變化(試驗測試階段，有問題再恢復)
+            attributeFilter: ['value', 'placeholder', 'aria-label', 'data-confirm'], // 僅觀察特定屬性變化(試驗測試階段，有問題再恢復)
         });
 
         new m(function(mutations) {
@@ -76,7 +80,7 @@
             translateBySelector(); // Selector 翻譯 目前先跟隨 url 即頁面標題變化
         }).observe(
             document.querySelector('title'),
-            { characterData: true, childList: true }
+            { childList: true }
         );
     }
 
@@ -99,7 +103,7 @@
 
         for (var i = 0, len = nodes.length; i <= len; i++) { // 遍歷節點
             var el = nodes[i] ? nodes[i] : node; //可能還要最佳化 該節點不存在子節點
-            // todo 1. 修復多屬性翻譯問題; 2. 新增事件翻譯, 如論預覽訊息;
+            // todo 1. 修復多屬性翻譯問題; 2. 新增事件翻譯, 如論預覽資訊;
 
             if (el.nodeType === Node.ELEMENT_NODE) { // 元素節點處理
 
@@ -114,7 +118,7 @@
                         transElement(el, 'placeholder');
                     }
                 } else if (el.tagName === 'BUTTON'){
-                    if (el.hasAttribute('aria-label')) {
+                    if (el.hasAttribute('aria-label') && /tooltipped/.test(el.className)) {
                         transElement(el, 'aria-label', true); // 翻譯 瀏覽器 提示對話方塊
                     }
                     if (el.hasAttribute('data-confirm')) {
@@ -255,37 +259,35 @@
      */
     function translate(text, page) { // 翻譯
 
-        if (!isNaN(text)) {
+        if (!isNaN(text) || /^[\s]*[\u4e00-\u9fa5]|[\u4e00-\u9fa5][\s]*$/.test(text)) {
             return false;
-        } // 內容為空, 空白字元和或數字 不翻譯
+        } // 內容為空, 空白字元和或數字, 已翻譯漢字 不翻譯
 
         var str;
         var _key = text.trim(); // 去除首尾空格的 key
         var _key_neat = _key
             .replace(/\xa0/g, ' ') // 替換 &nbsp; 空格導致的 bug
-            .replace(/\s{2,}/g, ' ') // 去除多餘空白字元，(試驗測試階段，有問題再恢復)
-            .replace(/[\s\r\n]+/g, ' '); // 替換中間的換行符為空格; 後期正則翻譯規則可以不用考慮換行符的問題了
+            .replace(/[\s]+/g, ' ') // 去除多餘空白字元(空格 換行符)，(試驗測試階段，有問題再恢復)
 
         if (page === 'title') {
             return transPage('title', _key_neat);
         } // 翻譯網頁標題
 
-        str = transPage('pubilc', _key_neat); // 公共翻譯
-
-        if (str && str !== _key_neat) { // 公共翻譯完成
-            return text.replace(_key, str);  // 替換原字元，保留空白部分
-        }
-
-        if (!page) {
-            return false;
+        if (page) {
+            str = transPage(page, _key_neat); // 翻譯已知頁面 (區域性優先)
         } // 未知頁面不翻譯
 
-        str = transPage(page, _key_neat); // 翻譯已知頁面
+        if (str && str !== _key_neat) { // 已知頁面翻譯完成
+            return str;
+        }
+
+        str = transPage('pubilc', _key_neat); // 公共翻譯
+
         if (!str) {
             return false;
         } // 未知內容不翻譯
 
-        return text.replace(_key, str); // 替換原字元，保留空白部分
+        return str;
     }
 
 
@@ -310,12 +312,14 @@
         }
 
         // 正則翻譯
-        var res = I18N[lang][page].regexp; // 正則陣列
-        if (res) {
-            for (var i = 0, len = res.length; i < len; i++) {
-                str = key.replace(res[i][0], res[i][1]);
-                if (str !== key) {
-                    return str;
+        if (RegExp){
+            var res = I18N[lang][page].regexp; // 正則陣列
+            if (res) {
+                for (var i = 0, len = res.length; i < len; i++) {
+                    str = key.replace(res[i][0], res[i][1]);
+                    if (str !== key) {
+                        return str;
+                    }
                 }
             }
         }
@@ -353,10 +357,10 @@
                 url: `https://www.githubs.cn/translate?q=`+ encodeURIComponent(desc),
                 onload: function(res) {
                     if (res.status === 200) {
-                         translate_me.style.display="none";
+                        translate_me.style.display="none";
                         // render result
                         const text = res.responseText;
-                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社羣</a> 翻譯👇</span><br/>"+text);
+                        element.insertAdjacentHTML('afterend', "<span style='font-size: small'>由 <a target='_blank' style='color:rgb(27, 149, 224);' href='https://www.githubs.cn'>GitHub中文社群</a> 翻譯👇</span><br/>"+text);
                     } else {
                         alert("翻譯失敗");
                     }
@@ -378,9 +382,22 @@
                 let element = document.querySelector(res[i][0])
                 if (element) {
                     element.textContent = res[i][1];
+                } else if (document.getElementsByClassName(res[i][0]).length != 0) {
+                    document.getElementsByClassName(res[i][0])[0].textContent = res[i][1];
                 }
             }
         }
     }
+
+    GM_registerMenuCommand("正則切換", () => {
+        if (RegExp){
+            GM_setValue("RegExp", 0);
+            GM_notification("已關閉正則功能");
+        } else {
+            GM_setValue("RegExp", 1);
+            GM_notification("已開啟正則功能");
+            location.reload();
+        }
+    })
 
 })(window, document);
